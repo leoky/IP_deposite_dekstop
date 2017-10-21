@@ -1,4 +1,6 @@
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -27,15 +29,48 @@ public class InputDeposito extends javax.swing.JFrame {
     Connection conn;
     PreparedStatement stmt;
     ResultSet rs = null;
-    Double nilai, bunga, tax, gross, nett;
+    double nilai, bunga, tax, gross, taxp, nett, total;
+    String type = "ARO";
 
     public InputDeposito() {
         initComponents();
         getConnection();
+        Deposito.a("ARO");
+        getData();
+        AddListener();
     }
 
     //all method
     //db
+    private void AddListener() {
+        jDateChooser1.addPropertyChangeListener(
+                new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (jDateChooser2.getDate() != null) {
+                    if (jDateChooser2.getDate().after(jDateChooser1.getDate())) {
+                        jLabel22.setText(Float.toString(ChronoUnit.DAYS.between(jDateChooser1.getCalendar().toInstant(), jDateChooser2.getCalendar().toInstant())));
+                    } else {
+                        jLabel22.setText("0");
+                    }
+                };
+            }
+        });
+        jDateChooser2.addPropertyChangeListener(
+                new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (jDateChooser1.getDate() != null) {
+                    if (jDateChooser2.getDate().after(jDateChooser1.getDate())) {
+                        jLabel22.setText(String.format("%d", (ChronoUnit.DAYS.between(jDateChooser1.getCalendar().toInstant(), jDateChooser2.getCalendar().toInstant()))));
+                    } else {
+                        jLabel22.setText("0");
+                    }
+                };
+            }
+        });
+    }
+
     private Connection getConnection() {
         try {
             conn = DriverManager.getConnection(DataBase.JDBC_URL, DataBase.JDBC_USERNAME, DataBase.JDBC_PASSWORD);
@@ -46,6 +81,20 @@ public class InputDeposito extends javax.swing.JFrame {
             System.out.println("CANNOT CONNECT");
             return null;
         }
+    }
+
+    private void getData() {
+        tfBank.setText(Deposito.bank);
+        tfBil1.setText(Deposito.bilyet1);
+        tfBil2.setText(Deposito.bilyet2);
+        tfNilai.setText(String.format("Rp.%,.2f", Deposito.total));
+        tfBunga.setText("" + (int) Deposito.bunga);
+        tfTax.setText("10");
+        tfNama.setText(Deposito.nama);
+        jLabel16.setText("0");
+        jLabel17.setText("0");
+        jLabel18.setText("0");
+        jLabel24.setText("0");
     }
 
     //method to number
@@ -64,20 +113,31 @@ public class InputDeposito extends javax.swing.JFrame {
     public void Count() {
         long hari = ChronoUnit.DAYS.between(jDateChooser1.getCalendar().toInstant(), jDateChooser2.getCalendar().toInstant());
         nilai = Double.parseDouble(setSymbolToDigit(tfNilai.getText()));
-        bunga = Double.parseDouble(tfBunga.getText());
-        tax = Double.parseDouble(tfTax.getText());
-        gross = (nilai * bunga / 100 * hari / 365) + nilai;
-        tax = gross * tax / 100;
-        nett = gross - tax;
-        System.out.println("nilai :" + nilai + " tax: " + tax + " gross ; " + gross + " nett : " + nett);
 
+        bunga = Double.parseDouble(tfBunga.getText());
+        taxp = Double.parseDouble(tfTax.getText());
+        gross = (nilai * (bunga / 100.0) * (hari / 365.0));
+        tax = gross * taxp / 100.0;
+        nett = gross - tax;
+        if (cbType.getSelectedItem().equals("ARO")) {
+            total = nilai + nett;
+        } else {
+            total = 0;
+        }
+//        jLabel16.setText(String.format("Rp %f02", gross));
+        jLabel16.setText(String.format("Rp.%,.2f", gross));
+        jLabel24.setText(String.format("Rp.%,.2f", tax));
+        jLabel17.setText(String.format("Rp.%,.2f", nett));
+        jLabel18.setText(String.format("Rp.%,.2f", total));
+
+        System.out.println(nilai + " kali " + bunga + " hari: " + hari + " tax : " + tax);
     }
 
     //method to check empty
-    public void checkEmpty(){
-        
+    public void checkEmpty() {
+
     }
-    
+
     //end all method
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -115,6 +175,11 @@ public class InputDeposito extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         tfNama = new javax.swing.JTextField();
         jDateChooser1 = new com.toedter.calendar.JDateChooser();
+        jLabel21 = new javax.swing.JLabel();
+        jLabel22 = new javax.swing.JLabel();
+        jButton2 = new javax.swing.JButton();
+        jLabel23 = new javax.swing.JLabel();
+        jLabel24 = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -179,11 +244,11 @@ public class InputDeposito extends javax.swing.JFrame {
             }
         });
 
-        jLabel16.setText("jLabel16");
+        jLabel16.setText("0");
 
-        jLabel17.setText("jLabel17");
+        jLabel17.setText("0");
 
-        jLabel18.setText("jLabel18");
+        jLabel18.setText("0");
 
         jDateChooser2.setDateFormatString("yyyy-MM-dd ");
 
@@ -192,6 +257,11 @@ public class InputDeposito extends javax.swing.JFrame {
         jLabel20.setText("%");
 
         cbType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ARO", "TT" }));
+        cbType.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbTypeActionPerformed(evt);
+            }
+        });
 
         jButton1.setText("INPUT");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -201,6 +271,21 @@ public class InputDeposito extends javax.swing.JFrame {
         });
 
         jDateChooser1.setDateFormatString("yyyy-MM-dd");
+
+        jLabel21.setText("HARI");
+
+        jLabel22.setText("0");
+
+        jButton2.setText("CALCULATE");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
+        jLabel23.setText("TAX");
+
+        jLabel24.setText("0");
 
         jMenu1.setText("File");
         jMenuBar1.add(jMenu1);
@@ -225,30 +310,36 @@ public class InputDeposito extends javax.swing.JFrame {
                             .addComponent(jLabel7)
                             .addComponent(jLabel14)
                             .addComponent(jLabel3)
-                            .addComponent(jLabel4))
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel21))
                         .addGap(41, 41, 41)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(tfBank)
-                            .addComponent(cbCompany, 0, 230, Short.MAX_VALUE)
-                            .addComponent(tfBil1)
-                            .addComponent(tfBil2)
-                            .addComponent(jDateChooser2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(cbType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jDateChooser1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel22)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(tfBank)
+                                .addComponent(cbCompany, 0, 230, Short.MAX_VALUE)
+                                .addComponent(tfBil1)
+                                .addComponent(tfBil2)
+                                .addComponent(jDateChooser2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(cbType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jDateChooser1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                         .addGap(101, 101, 101)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel13)
-                            .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel9)
-                            .addComponent(jLabel10)
-                            .addComponent(jLabel11)
-                            .addComponent(jLabel12))
-                        .addGap(35, 35, 35)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(2, 2, 2)
-                                .addComponent(jLabel18))
-                            .addComponent(jLabel17)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel9)
+                                    .addComponent(jLabel10)
+                                    .addComponent(jLabel11))
+                                .addGap(67, 67, 67))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jButton2)
+                                    .addComponent(jLabel12)
+                                    .addComponent(jLabel13)
+                                    .addComponent(jLabel23))
+                                .addGap(25, 25, 25)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel16)
                             .addComponent(tfNilai, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(layout.createSequentialGroup()
@@ -258,7 +349,10 @@ public class InputDeposito extends javax.swing.JFrame {
                                 .addGap(18, 18, 18)
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel19)
-                                    .addComponent(jLabel20)))))
+                                    .addComponent(jLabel20)))
+                            .addComponent(jLabel24)
+                            .addComponent(jLabel17)
+                            .addComponent(jLabel18)))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(363, 363, 363)
                         .addComponent(jLabel15)
@@ -277,41 +371,7 @@ public class InputDeposito extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel1)
                 .addGap(35, 35, 35)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel2)
-                            .addComponent(tfBank, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(28, 28, 28)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel3)
-                            .addComponent(jDateChooser1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(33, 33, 33)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel4)
-                            .addComponent(jDateChooser2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(27, 27, 27)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(jLabel5)
-                                    .addComponent(cbCompany, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(55, 55, 55))
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(tfBil1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(jLabel6)))
-                        .addGap(26, 26, 26)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel7)
-                            .addComponent(tfBil2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(25, 25, 25)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel14)
-                            .addComponent(cbType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(57, 57, 57)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel15)
-                            .addComponent(tfNama, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel8)
@@ -330,15 +390,65 @@ public class InputDeposito extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel11)
                             .addComponent(jLabel16))
-                        .addGap(34, 34, 34)
+                        .addGap(21, 21, 21)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel23)
+                            .addComponent(jLabel24)))
+                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel12)
-                            .addComponent(jLabel17))
-                        .addGap(37, 37, 37)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel13)
-                            .addComponent(jLabel18))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 48, Short.MAX_VALUE)
+                            .addComponent(jLabel2)
+                            .addComponent(tfBank, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(28, 28, 28)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel3)
+                            .addComponent(jDateChooser1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(33, 33, 33)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4)
+                            .addComponent(jDateChooser2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel21, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel22, javax.swing.GroupLayout.Alignment.TRAILING))))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel17)
+                        .addGap(60, 60, 60))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jLabel5)
+                                    .addComponent(cbCompany, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(73, 73, 73))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel12)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(0, 0, Short.MAX_VALUE)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                            .addComponent(tfBil1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(jLabel6)))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                            .addComponent(jLabel13)
+                                            .addComponent(jLabel18))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jButton2)))))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(tfBil2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(25, 25, 25)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel14)
+                    .addComponent(cbType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(21, 21, 21)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel15)
+                    .addComponent(tfNama, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 28, Short.MAX_VALUE)
                 .addComponent(jButton1)
                 .addGap(45, 45, 45))
         );
@@ -360,44 +470,50 @@ public class InputDeposito extends javax.swing.JFrame {
     }//GEN-LAST:event_tfNilaiFocusLost
 //TextField price check if gain focus
     private void tfNilaiFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tfNilaiFocusGained
-//        try {
+        if(tfNilai.getText().length() >=3){
         if (tfNilai.getText().substring(0, 3).equals("Rp.")) {
             tfNilai.setText(setSymbolToDigit(tfNilai.getText()));
         } else {
             System.out.println("fs");
         }
+        }
     }//GEN-LAST:event_tfNilaiFocusGained
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         Boolean input = Boolean.TRUE;
+        nilai = Deposito.nilai;
         try {
+            Count();
+            if (!jLabel18.isVisible()) {
+                total = 0;
+            }
             Date a = jDateChooser1.getDate();
             Date e = jDateChooser2.getDate();
             int check = JOptionPane.showConfirmDialog(this, "APAKAH MAU DICAIRKAN ?");
             if (check == JOptionPane.YES_OPTION) {
                 input = Boolean.TRUE;
                 SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd");
-                
+
                 stmt = conn.prepareStatement("INSERT INTO DEPOSITO(dep_bank,dep_tgl_jto,dep_tgl_perpanjangan,"
                         + "dep_company,dep_no_bilyet_1,dep_no_bilyet_2,"
                         + "dep_type,dep_nilai,dep_bunga,"
                         + "dep_hari,dep_gross,dep_tax,"
                         + "dep_nett,dep_pokokdanBunga,dep_nama,dep_pencairan)"
                         + "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-                stmt.setString(1, "'" + tfBank.getText() + "'");
+                stmt.setString(1, tfBank.getText());
                 stmt.setString(2, s.format(a));
                 stmt.setString(3, s.format(e));
-                stmt.setString(4, "'" + cbCompany.getSelectedItem() + "'");
-                stmt.setString(5, "'" + tfBil1.getText() + "'");
-                stmt.setString(6, "'" + tfBil2.getText() + "'");
-                stmt.setString(7, "'" + cbType.getSelectedItem() + "'");
-                stmt.setDouble(8, 1);
-                stmt.setDouble(9, 1);
+                stmt.setString(4, (String) cbCompany.getSelectedItem());
+                stmt.setString(5, tfBil1.getText());
+                stmt.setString(6, tfBil2.getText());
+                stmt.setString(7, (String) cbType.getSelectedItem());
+                stmt.setDouble(8, nilai);
+                stmt.setDouble(9, (int) bunga);
                 stmt.setInt(10, (int) ChronoUnit.DAYS.between(jDateChooser1.getCalendar().toInstant(), jDateChooser2.getCalendar().toInstant()));
-                stmt.setDouble(11, 1);
-                stmt.setDouble(12, 1);
-                stmt.setDouble(13, 1);
-                stmt.setDouble(14, 1);
+                stmt.setDouble(11, gross);
+                stmt.setDouble(12, tax);
+                stmt.setDouble(13, nett);
+                stmt.setDouble(14, total);
                 stmt.setString(15, tfNama.getText());
                 stmt.setBoolean(16, input);
                 stmt.executeUpdate();
@@ -410,8 +526,11 @@ public class InputDeposito extends javax.swing.JFrame {
 //                        + "dep_nett,dep_pokokdanBunga,dep_nama,dep_pencairan)"
 //                        + "values('1',null,null,'1','1','1','1',1,1,1,1,1,1,1,'1','1')");
                 System.out.println("sucess");
+                Deposito.a(type);
+                getData();
             }
         } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e);
             e.printStackTrace();
         }
 
@@ -432,6 +551,38 @@ public class InputDeposito extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_tfBil2FocusLost
+
+    private void cbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbTypeActionPerformed
+        if (cbType.getSelectedItem().equals("TT")) {
+            type = "TT";
+            Deposito.a(type);
+            getData();
+            tfNilai.setText(String.format("Rp.%,.2f", Deposito.nilai));
+            jLabel13.setVisible(false);
+            jLabel18.setVisible(false);
+            
+            
+
+        } else if (cbType.getSelectedItem().equals("ARO")) {
+            type = "ARO";
+            Deposito.a(type);
+            getData();
+            tfNilai.setText(String.format("Rp.%,.2f", Deposito.total));
+            jLabel13.setVisible(true);
+            jLabel18.setVisible(true);
+            
+            
+        }
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cbTypeActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        try {
+            Count();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_jButton2ActionPerformed
     /**
      * @param args the command line arguments
      */
@@ -474,6 +625,7 @@ public class InputDeposito extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> cbCompany;
     private javax.swing.JComboBox<String> cbType;
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private com.toedter.calendar.JDateChooser jDateChooser1;
     private com.toedter.calendar.JDateChooser jDateChooser2;
     private javax.swing.JLabel jLabel1;
@@ -489,6 +641,10 @@ public class InputDeposito extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
+    private javax.swing.JLabel jLabel23;
+    private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
