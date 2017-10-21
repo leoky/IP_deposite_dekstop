@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -46,14 +47,20 @@ public class InputDeposito extends javax.swing.JFrame {
         jDateChooser1.addPropertyChangeListener(
                 new PropertyChangeListener() {
             @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                if (jDateChooser2.getDate() != null) {
-                    if (jDateChooser2.getDate().after(jDateChooser1.getDate())) {
-                        jLabel22.setText(Float.toString(ChronoUnit.DAYS.between(jDateChooser1.getCalendar().toInstant(), jDateChooser2.getCalendar().toInstant())));
-                    } else {
-                        jLabel22.setText("0");
-                    }
-                };
+            public void propertyChange(PropertyChangeEvent evt)throws NullPointerException{
+                if (jDateChooser1.getDate().after(Deposito.date)) {
+                    if (jDateChooser2.getDate() != null) {
+                        if (jDateChooser2.getDate().after(jDateChooser1.getDate())) {
+                            jLabel22.setText(Float.toString(ChronoUnit.DAYS.between(jDateChooser1.getCalendar().toInstant(), jDateChooser2.getCalendar().toInstant())));
+                        } else {
+                            jLabel22.setText("0");
+                        }
+                    };
+                } else {
+                    JOptionPane.showMessageDialog(null, "Date have been input it before ");
+                    jDateChooser1.setCalendar(null);
+                    jDateChooser2.setCalendar(null);
+                }
             }
         });
         jDateChooser2.addPropertyChangeListener(
@@ -64,6 +71,8 @@ public class InputDeposito extends javax.swing.JFrame {
                     if (jDateChooser2.getDate().after(jDateChooser1.getDate())) {
                         jLabel22.setText(String.format("%d", (ChronoUnit.DAYS.between(jDateChooser1.getCalendar().toInstant(), jDateChooser2.getCalendar().toInstant()))));
                     } else {
+                        JOptionPane.showMessageDialog(null,"Please input valid date");
+                        jDateChooser2.setCalendar(null);
                         jLabel22.setText("0");
                     }
                 };
@@ -470,12 +479,12 @@ public class InputDeposito extends javax.swing.JFrame {
     }//GEN-LAST:event_tfNilaiFocusLost
 //TextField price check if gain focus
     private void tfNilaiFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tfNilaiFocusGained
-        if(tfNilai.getText().length() >=3){
-        if (tfNilai.getText().substring(0, 3).equals("Rp.")) {
-            tfNilai.setText(setSymbolToDigit(tfNilai.getText()));
-        } else {
-            System.out.println("fs");
-        }
+        if (tfNilai.getText().length() >= 3) {
+            if (tfNilai.getText().substring(0, 3).equals("Rp.")) {
+                tfNilai.setText(setSymbolToDigit(tfNilai.getText()));
+            } else {
+                System.out.println("fs");
+            }
         }
     }//GEN-LAST:event_tfNilaiFocusGained
 
@@ -560,8 +569,6 @@ public class InputDeposito extends javax.swing.JFrame {
             tfNilai.setText(String.format("Rp.%,.2f", Deposito.nilai));
             jLabel13.setVisible(false);
             jLabel18.setVisible(false);
-            
-            
 
         } else if (cbType.getSelectedItem().equals("ARO")) {
             type = "ARO";
@@ -570,8 +577,7 @@ public class InputDeposito extends javax.swing.JFrame {
             tfNilai.setText(String.format("Rp.%,.2f", Deposito.total));
             jLabel13.setVisible(true);
             jLabel18.setVisible(true);
-            
-            
+
         }
         // TODO add your handling code here:
     }//GEN-LAST:event_cbTypeActionPerformed

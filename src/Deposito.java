@@ -4,6 +4,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,6 +29,7 @@ public class Deposito {
     static String nama;
     static Boolean status;
     static double total;
+    static Date date;
 
     static Connection conn;
     static PreparedStatement stmt;
@@ -47,10 +50,12 @@ public class Deposito {
     public static void a(String type) {
         try {
             getConnection();
+            
             stmt = conn.prepareStatement("SELECT * FROM DEPOSITO  where dep_type ='" + type + "'order by dep_tgl_perpanjangan desc limit 1");
             rs = stmt.executeQuery();
             while (rs.next()) {
                 Deposito.bank = rs.getString("dep_bank");
+                Deposito.date = rs.getDate("dep_tgl_perpanjangan");
                 Deposito.bilyet1 = rs.getString("dep_no_bilyet_1");
                 Deposito.bilyet2 = rs.getString("dep_no_bilyet_2");
                 Deposito.nilai = rs.getDouble("dep_nilai");
