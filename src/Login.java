@@ -11,7 +11,7 @@ public class Login extends javax.swing.JFrame {
     PreparedStatement stmt;
     ResultSet rs = null;
     Connection conn = null;
-
+    
     public Login() {
         initComponents();
         this.conn = Deposito.getConnection();
@@ -25,9 +25,9 @@ public class Login extends javax.swing.JFrame {
                 new Login();
             }
         }
-
+        
     }
-
+    
     private void login() {
         try {
             if (jTextField1.getText().length() == 0 || jPasswordField1.getPassword().length == 0) {
@@ -52,6 +52,7 @@ public class Login extends javax.swing.JFrame {
                         inputDeposito.setVisible(true);
                         jTextField1.setText("");
                         jPasswordField1.setText("");
+                        inputDeposito.setLabelUser(name);
                     } else {
                         JOptionPane.showMessageDialog(this, "incorect user or pass");
                         jPasswordField1.setText("");
@@ -62,7 +63,7 @@ public class Login extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, e);
         }
     }
-
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -178,7 +179,7 @@ public class Login extends javax.swing.JFrame {
         if (check == JOptionPane.YES_OPTION) {
             System.exit(0);
         } else if (check == JOptionPane.NO_OPTION) {
-
+            
         }
     }//GEN-LAST:event_jButton2ActionPerformed
 

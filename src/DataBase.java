@@ -10,6 +10,7 @@
  */
 public class DataBase {
 
+    public static String username;
     public static final String JDBC_CLASS = "com.mysql.jdbc.Driver";
     public static final String JDBC_URL = "jdbc:mysql://localhost/ipi_dekstop";
     public static final String JDBC_USERNAME = "root";
